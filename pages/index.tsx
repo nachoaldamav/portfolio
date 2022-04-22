@@ -1,7 +1,9 @@
 import Link from 'next/link'
-import { useRef, useState } from 'react'
-import { motion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import { motion, useTransform, useViewportScroll } from 'framer-motion'
 import useIntersection from '../hooks/useIntersection'
+
+const randomRadius = () => Array.from({ length: 4 }, () => Math.random() * 100)
 
 const scenes = [
   {
@@ -13,11 +15,14 @@ const scenes = [
         x: -10,
         y: -10,
         width: '25rem',
+        bgColors: ['252, 40%, 29%, 1', '270, 77%, 71%, 1'],
+        radius: `${randomRadius().join('% ')}`,
       },
       {
         x: 80,
         y: 65,
         width: '30rem',
+        bgColors: ['252, 40%, 29%, 1', '270, 77%, 71%, 1'],
       },
     ],
   },
@@ -30,11 +35,13 @@ const scenes = [
         x: 65,
         y: -10,
         width: '25rem',
+        bgColors: ['270, 94%, 25%, 1', '158, 94%, 49%, 1'],
       },
       {
         x: -10,
         y: 30,
         width: '35rem',
+        bgColors: ['158, 94%, 49%, 1', '270, 94%, 25%, 1'],
       },
     ],
   },
@@ -47,11 +54,13 @@ const scenes = [
         x: 20,
         y: 70,
         width: '35rem',
+        bgColors: ['191, 75%, 60%, 1', '248, 87%, 36%, 1'],
       },
       {
         x: 60,
         y: -10,
         width: '30rem',
+        bgColors: ['248, 87%, 36%, 1', '191, 75%, 60%, 1'],
       },
     ],
   },
@@ -64,9 +73,9 @@ export default function Home() {
   const [currentScene, setCurrentScene] = useState(0)
 
   return (
-    <main className="flex h-full min-h-screen snap-y snap-proximity flex-col bg-black">
+    <main className="flex min-h-screen snap-y snap-proximity flex-col bg-black">
       <div className="fixed top-0 left-0 h-screen w-full">
-        <span className="absolute z-10 h-screen w-full bg-opacity-70 bg-clip-padding backdrop-blur-[75px] backdrop-filter"></span>
+        <span className="absolute top-0 left-0 z-10 h-screen w-full bg-opacity-70 bg-clip-padding p-10 backdrop-blur-[100px] backdrop-filter"></span>
         <Bubbles scene={currentScene} />
       </div>
       <div className="z-20 h-screen w-full snap-y snap-mandatory overflow-scroll overflow-x-hidden">
@@ -92,13 +101,22 @@ export default function Home() {
           setScene={setCurrentScene}
           currentScene={currentScene}
         >
-          <div className="flex flex-col items-center justify-center">
+          <div className="mx-10 flex w-full flex-col items-center justify-center md:w-2/3 lg:w-1/2 xl:w-1/3">
             <h2 className="text-xl text-white">
               <span className="font-semibold text-opacity-75">
                 I'm a junior full-stack developer
               </span>
             </h2>
             {/* Add languages */}
+            <p className="mt-2 text-white text-opacity-50">
+              In 2019 I started my journey as a developer, and I've been
+              learning and growing every day.
+            </p>
+            <p className="mt-2 text-white text-opacity-50">
+              Up until now I've been working with JavaScript, React and Node.js
+              to create some websites like a video chat app or an appointment
+              management tool.
+            </p>
           </div>
         </HomeSection>
         <HomeSection
@@ -140,13 +158,14 @@ export default function Home() {
 
 const HomeSection = ({ children, id, setScene, scene, currentScene }: any) => {
   const ref = useRef(id)
-  const inViewport = useIntersection(ref, '-100px') // Trigger as soon as the element becomes visible// Trigger if 200px is visible from the element
+  const inViewport = useIntersection(ref, '-50px')
 
-  if (inViewport) {
-    console.log('in viewport:', ref.current)
-    console.log('current scene:', currentScene)
-    setScene(scene)
-  }
+  useEffect(() => {
+    if (inViewport) {
+      setScene(scene)
+      console.log(scene)
+    }
+  }, [scene, inViewport])
 
   return (
     <section
@@ -177,28 +196,41 @@ const CardProject = ({ title, description, image, link }: any) => {
 }
 
 const Bubbles = ({ scene }: any) => {
+  //bg-[#261c48]
+
   return (
     <div className="relative top-0 left-0 h-full w-full">
       {scenes[scene].bubbles.map((bubble, index) => (
-        <motion.span
-          key={index}
-          itemID={`bubble-${index}`}
-          className="absolute z-0 bg-[#261c48] opacity-[60%]"
-          style={{
-            borderRadius: '100%',
-          }}
-          animate={{
-            top: `${bubble.y}%`,
-            left: `${bubble.x}%`,
-            width: `${bubble.width}`,
-            height: `${bubble.width}`,
-          }}
-          transition={{
-            duration: 1,
-            ease: 'easeInOut',
-          }}
-        ></motion.span>
+        <Bubble key={index} index={index} bubble={bubble} />
       ))}
     </div>
   )
+}
+
+const Bubble = ({ bubble, index }: any) => {
+  return (
+    <motion.span
+      key={index}
+      itemID={`bubble-${index}`}
+      className="absolute z-0 opacity-[70%]"
+      style={{
+        borderRadius: `${(randomPercentage + '% ').repeat(4)}`,
+      }}
+      animate={{
+        width: `400px`,
+        height: `400px`,
+        background: `linear-gradient(90deg, hsla(${bubble.bgColors[0]}) 0%, hsla(${bubble.bgColors[1]}) 100%)`,
+        top: `${bubble.y * 7}px`,
+        left: `${bubble.x * 15}px`,
+      }}
+      transition={{
+        duration: 2,
+        ease: 'easeInOut',
+      }}
+    ></motion.span>
+  )
+}
+
+function randomPercentage() {
+  return (Math.random() * 100).toString()
 }
